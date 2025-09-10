@@ -1,165 +1,101 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Zap, Star, Rocket, Clock, Users, Trophy, CheckCircle, XCircle } from 'lucide-react';
-import { quizQuestions, type Player, type GameState } from '@shared/quiz-data';
+import { Sparkles, Zap, Star, Rocket, Clock, Trophy, CheckCircle, XCircle } from 'lucide-react';
+import { quizQuestions, type Player } from '@shared/quiz-data';
 
 interface QuizPageProps {
   onBack: () => void;
 }
 
+interface PlayerAnswer {
+  questionId: number;
+  answer: 'a' | 'b' | 'c' | 'd';
+  correct: boolean;
+  timeToAnswer: number;
+}
+
 export function QuizPage({ onBack }: QuizPageProps) {
   const [name, setName] = useState('');
-  const [gamePhase, setGamePhase] = useState<'join' | 'waiting' | 'quiz' | 'results'>('join');
-  const [gameState, setGameState] = useState<GameState>({ phase: 'lobby', currentQuestion: 0, players: [] });
-  const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [gamePhase, setGamePhase] = useState<'join' | 'quiz' | 'results'>('join');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [myScore, setMyScore] = useState(0);
-  const [finalResults, setFinalResults] = useState<any[]>([]);
-  const [playerId, setPlayerId] = useState<string>('');
-  const ws = useRef<WebSocket | null>(null);
+  const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<PlayerAnswer[]>([]);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  useEffect(() => {
-    return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
-    };
-  }, []);
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+  const totalQuestions = quizQuestions.length;
 
-  const connectToQuiz = () => {
+  const startQuiz = () => {
     if (!name.trim()) return;
-    
-    // Connect to WebSocket server
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/quiz`;
-    
-    ws.current = new WebSocket(wsUrl);
-
-    ws.current.onopen = () => {
-      console.log('Connected to quiz WebSocket');
-      // Generate a unique player ID and join
-      const id = Math.random().toString(36).substr(2, 9);
-      setPlayerId(id);
-      
-      ws.current?.send(JSON.stringify({
-        type: 'join',
-        data: { id, name: name.trim() }
-      }));
-      
-      setGamePhase('waiting');
-    };
-
-    ws.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      switch (data.type) {
-        case 'playerIdAssigned':
-          // Server sends back the actual player ID to ensure consistency
-          console.log('Server assigned player ID:', data.data.playerId);
-          setPlayerId(data.data.playerId);
-          break;
-          
-        case 'gameState':
-          setGameState(data.data);
-          if (data.data.phase === 'quiz') {
-            setGamePhase('quiz');
-            setCurrentQuestion(quizQuestions[data.data.currentQuestion]);
-            setSelectedAnswer('');
-            setHasAnswered(false);
-          } else if (data.data.phase === 'results') {
-            setGamePhase('results');
-          }
-          break;
-          
-        case 'quizStarted':
-          setGamePhase('quiz');
-          setCurrentQuestion(quizQuestions[0]);
-          setSelectedAnswer('');
-          setHasAnswered(false);
-          break;
-          
-        case 'nextQuestion':
-          if (data.data && data.data.question) {
-            setCurrentQuestion(data.data.question);
-            setSelectedAnswer('');
-            setHasAnswered(false);
-          }
-          break;
-          
-        case 'quizFinished':
-          setFinalResults(data.data.allResults);
-          console.log('QuizFinished - Looking for playerId:', playerId);
-          console.log('All results:', data.data.allResults);
-          const myResult = data.data.allResults.find((r: any) => r.id === playerId);
-          console.log('My result found:', myResult);
-          if (myResult) {
-            setMyScore(myResult.score);
-          } else {
-            // Fallback: try to find by name as well
-            const nameResult = data.data.allResults.find((r: any) => r.name === name);
-            if (nameResult) {
-              console.log('Found by name instead:', nameResult);
-              setMyScore(nameResult.score);
-            }
-          }
-          setGamePhase('results');
-          break;
-          
-        case 'gameReset':
-          setGamePhase('waiting');
-          setGameState(data.data);
-          setCurrentQuestion(null);
-          setSelectedAnswer('');
-          setHasAnswered(false);
-          setMyScore(0);
-          setFinalResults([]);
-          break;
-      }
-    };
-
-    ws.current.onclose = () => {
-      console.log('Disconnected from quiz WebSocket');
-    };
-
-    ws.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      alert('Unable to connect to quiz server. Please try again.');
-      setGamePhase('join');
-    };
+    setGamePhase('quiz');
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setAnswers([]);
+    setQuestionStartTime(Date.now());
+    setHasAnswered(false);
+    setShowAnswer(false);
+    setSelectedAnswer('');
   };
 
   const submitAnswer = (answer: string) => {
-    if (hasAnswered || !ws.current) return;
+    if (hasAnswered) return;
     
     setSelectedAnswer(answer);
     setHasAnswered(true);
+    setShowAnswer(true);
     
-    ws.current.send(JSON.stringify({
-      type: 'submitAnswer',
-      data: { 
-        playerId, 
-        answer, 
-        questionIndex: gameState.currentQuestion 
+    const isCorrect = answer === currentQuestion.correct;
+    const timeToAnswer = Date.now() - questionStartTime;
+    
+    const newAnswer: PlayerAnswer = {
+      questionId: currentQuestion.id,
+      answer: answer as 'a' | 'b' | 'c' | 'd',
+      correct: isCorrect,
+      timeToAnswer
+    };
+    
+    setAnswers(prev => [...prev, newAnswer]);
+    
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    
+    // Auto-advance to next question after 3 seconds
+    setTimeout(() => {
+      if (currentQuestionIndex < totalQuestions - 1) {
+        nextQuestion();
+      } else {
+        setGamePhase('results');
       }
-    }));
+    }, 3000);
   };
 
-  const leaveQuiz = () => {
-    if (ws.current) {
-      ws.current.close();
+  const nextQuestion = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedAnswer('');
+      setHasAnswered(false);
+      setShowAnswer(false);
+      setQuestionStartTime(Date.now());
+    } else {
+      setGamePhase('results');
     }
+  };
+
+  const resetQuiz = () => {
     setGamePhase('join');
     setName('');
-    setGameState({ phase: 'lobby', currentQuestion: 0, players: [] });
-    setCurrentQuestion(null);
+    setCurrentQuestionIndex(0);
     setSelectedAnswer('');
     setHasAnswered(false);
-    setMyScore(0);
-    setFinalResults([]);
-    setPlayerId('');
+    setScore(0);
+    setAnswers([]);
+    setShowAnswer(false);
   };
 
   // Join Phase
@@ -200,7 +136,7 @@ export function QuizPage({ onBack }: QuizPageProps) {
                 
                 <h1 className="text-4xl font-black text-black dark:text-gray-900 leading-tight" data-testid="text-quiz-title">
                   <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-500 bg-clip-text text-transparent">
-                    MULTIPLAYER QUIZ!
+                    NMR QUIZ!
                   </span>
                 </h1>
                 
@@ -208,11 +144,8 @@ export function QuizPage({ onBack }: QuizPageProps) {
                   <p className="text-xl font-bold text-black dark:text-gray-900">
                     Enter your name
                   </p>
-                  <p className="text-lg font-bold text-red-600 dark:text-red-700">
-                    (real names please!!!)
-                  </p>
                   <p className="text-lg font-bold text-black dark:text-gray-900">
-                    and join live quiz
+                    and test your knowledge
                   </p>
                 </div>
               </div>
@@ -221,22 +154,22 @@ export function QuizPage({ onBack }: QuizPageProps) {
               <div className="space-y-4">
                 <Input
                   type="text"
-                  placeholder="Your real name here..."
+                  placeholder="Your name here..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && connectToQuiz()}
+                  onKeyPress={(e) => e.key === 'Enter' && startQuiz()}
                   className="h-12 text-lg font-semibold border-4 border-black dark:border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(64,64,64,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:focus:shadow-[6px_6px_0px_0px_rgba(64,64,64,1)] transition-shadow"
                   data-testid="input-quiz-name"
                 />
                 
                 <Button
-                  onClick={connectToQuiz}
+                  onClick={startQuiz}
                   disabled={!name.trim()}
                   className="w-full h-12 text-lg font-black bg-green-500 dark:bg-green-600 text-white border-4 border-black dark:border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(64,64,64,1)] disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="button-join-quiz"
+                  data-testid="button-start-quiz"
                 >
                   <Rocket className="w-5 h-5 mr-2" />
-                  JOIN LIVE QUIZ!
+                  START QUIZ!
                   <Rocket className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -270,47 +203,6 @@ export function QuizPage({ onBack }: QuizPageProps) {
     );
   }
 
-  // Waiting Phase
-  if (gamePhase === 'waiting') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20">
-            <CardHeader>
-              <CardTitle className="text-4xl font-bold text-white text-center flex items-center justify-center space-x-4">
-                <Users className="w-10 h-10" />
-                <span>Waiting for Quiz to Start...</span>
-              </CardTitle>
-              <p className="text-white/80 text-center text-xl">
-                You're in! Wait for your teacher to start the quiz.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center space-x-4">
-                  <Clock className="w-8 h-8 text-white animate-spin" />
-                  <p className="text-2xl font-bold text-white">Connected as {name}</p>
-                </div>
-                <p className="text-white/80">Players in lobby: {gameState.players.length}</p>
-                
-                <div className="mt-8">
-                  <Button
-                    onClick={leaveQuiz}
-                    variant="outline"
-                    className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                    data-testid="button-leave-quiz"
-                  >
-                    Leave Quiz
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   // Quiz Phase
   if (gamePhase === 'quiz' && currentQuestion) {
     return (
@@ -321,22 +213,24 @@ export function QuizPage({ onBack }: QuizPageProps) {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="text-2xl text-white">
-                  Question {gameState.currentQuestion + 1} of {quizQuestions.length}
+                  Question {currentQuestionIndex + 1} of {totalQuestions}
                 </CardTitle>
                 <div className="text-white font-bold text-lg">
-                  Your Score: {myScore}
+                  Score: {score}/{totalQuestions}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <h2 className="text-xl text-white mb-6">{currentQuestion.question}</h2>
+              <h2 className="text-xl text-white mb-6" data-testid="text-question">
+                {currentQuestion.question}
+              </h2>
               
               {/* Answer Options */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(currentQuestion.options).map(([key, value]) => {
                   const isSelected = selectedAnswer === key;
-                  const isCorrect = hasAnswered && key === currentQuestion.correct;
-                  const isWrong = hasAnswered && isSelected && key !== currentQuestion.correct;
+                  const isCorrect = showAnswer && key === currentQuestion.correct;
+                  const isWrong = showAnswer && isSelected && key !== currentQuestion.correct;
                   
                   return (
                     <Button
@@ -351,52 +245,35 @@ export function QuizPage({ onBack }: QuizPageProps) {
                       } text-white border-white/30`}
                       data-testid={`button-answer-${key}`}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center font-bold ${
-                          isSelected ? 'bg-white text-black' : ''
-                        }`}>
-                          {key.toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-lg">{value as string}</span>
-                        </div>
-                        {hasAnswered && (
-                          <div>
-                            {isCorrect && <CheckCircle className="w-6 h-6 text-green-200" />}
-                            {isWrong && <XCircle className="w-6 h-6 text-red-200" />}
-                          </div>
-                        )}
+                      <div className="flex items-center space-x-3">
+                        <span className="font-bold text-2xl">{key.toUpperCase()}</span>
+                        <span className="text-lg">{value}</span>
+                        {showAnswer && isCorrect && <CheckCircle className="w-6 h-6 text-green-300 ml-auto" />}
+                        {showAnswer && isWrong && <XCircle className="w-6 h-6 text-red-300 ml-auto" />}
                       </div>
                     </Button>
                   );
                 })}
               </div>
 
-              {hasAnswered && (
-                <div className="mt-6 p-4 bg-white/20 rounded-lg">
-                  <p className="text-white text-center">
-                    {selectedAnswer === currentQuestion.correct ? '🎉 Correct!' : '❌ Incorrect'}
-                    {selectedAnswer !== currentQuestion.correct && (
-                      <span className="block mt-2">
-                        The correct answer was: {currentQuestion.options[currentQuestion.correct]}
-                      </span>
-                    )}
+              {/* Show result after answering */}
+              {showAnswer && (
+                <div className="mt-6 p-4 bg-white/10 rounded-lg">
+                  <p className="text-white text-lg font-semibold">
+                    {selectedAnswer === currentQuestion.correct ? '✅ Correct!' : '❌ Incorrect'}
                   </p>
+                  <p className="text-white/80">
+                    The correct answer is: {currentQuestion.correct.toUpperCase()} - {currentQuestion.options[currentQuestion.correct]}
+                  </p>
+                  {currentQuestionIndex < totalQuestions - 1 ? (
+                    <p className="text-white/60 mt-2">Next question in 3 seconds...</p>
+                  ) : (
+                    <p className="text-white/60 mt-2">Quiz complete! Showing results in 3 seconds...</p>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Leave Quiz Button */}
-          <div className="flex justify-center">
-            <Button
-              onClick={leaveQuiz}
-              variant="outline"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              Leave Quiz
-            </Button>
-          </div>
         </div>
       </div>
     );
@@ -404,35 +281,54 @@ export function QuizPage({ onBack }: QuizPageProps) {
 
   // Results Phase
   if (gamePhase === 'results') {
-    const myRank = finalResults.findIndex(r => r.id === playerId) + 1;
+    const percentage = Math.round((score / totalQuestions) * 100);
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-blue-900 p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Results Header */}
           <Card className="bg-white/10 backdrop-blur-md border-white/20">
             <CardHeader>
-              <CardTitle className="text-4xl font-bold text-white text-center flex items-center justify-center space-x-4">
-                <Trophy className="w-10 h-10 text-yellow-400" />
+              <CardTitle className="text-4xl text-white text-center flex items-center justify-center space-x-4">
+                <Trophy className="w-12 h-12 text-yellow-400" />
                 <span>Quiz Complete!</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center space-y-6">
-                <div className="bg-white/20 rounded-lg p-6">
-                  <h2 className="text-3xl font-bold text-white mb-2">Your Results</h2>
-                  <p className="text-2xl text-white">
-                    Score: {myScore} / {quizQuestions.length}
-                  </p>
-                  <p className="text-xl text-white/80">
-                    Rank: #{myRank} out of {finalResults.length} players
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-white" data-testid="text-player-name">
+                    {name}
+                  </h2>
+                  <div className="text-6xl font-black text-white" data-testid="text-final-score">
+                    {score}/{totalQuestions}
+                  </div>
+                  <div className="text-2xl font-bold text-white">
+                    {percentage}%
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xl text-white">
+                    {percentage >= 80 ? '🎉 Excellent work!' :
+                     percentage >= 60 ? '👏 Good job!' :
+                     percentage >= 40 ? '📚 Keep studying!' :
+                     '💪 Try again!'}
                   </p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="flex justify-center space-x-4 pt-6">
                   <Button
-                    onClick={leaveQuiz}
-                    size="lg"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4"
+                    onClick={resetQuiz}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3"
+                    data-testid="button-retake-quiz"
+                  >
+                    Take Quiz Again
+                  </Button>
+                  <Button
+                    onClick={onBack}
+                    variant="outline"
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/30 font-bold px-8 py-3"
                     data-testid="button-back-to-learning"
                   >
                     Back to Learning
@@ -441,10 +337,57 @@ export function QuizPage({ onBack }: QuizPageProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Detailed Results */}
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-2xl text-white">Question Review</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {answers.map((answer, index) => {
+                  const question = quizQuestions.find(q => q.id === answer.questionId);
+                  if (!question) return null;
+                  
+                  return (
+                    <div
+                      key={answer.questionId}
+                      className={`p-4 rounded-lg ${
+                        answer.correct ? 'bg-green-600/20' : 'bg-red-600/20'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-white font-semibold">
+                            Q{index + 1}: {question.question}
+                          </p>
+                          <p className="text-white/80 mt-1">
+                            Your answer: {answer.answer.toUpperCase()} - {question.options[answer.answer]}
+                          </p>
+                          {!answer.correct && (
+                            <p className="text-white/80">
+                              Correct answer: {question.correct.toUpperCase()} - {question.options[question.correct]}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {answer.correct ? (
+                            <CheckCircle className="w-6 h-6 text-green-400" />
+                          ) : (
+                            <XCircle className="w-6 h-6 text-red-400" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  return <div>Loading...</div>;
+  return null;
 }
