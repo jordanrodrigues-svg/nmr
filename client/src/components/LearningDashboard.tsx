@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ContentModule } from './ContentModule';
+import { ShapeSequencePopup } from './ShapeSequencePopup';
+import { QuizPage } from './QuizPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +16,8 @@ export function LearningDashboard({ onBack }: LearningDashboardProps) {
   const [unlockedModules, setUnlockedModules] = useState<string[]>([]);
   const [unlockingModule, setUnlockingModule] = useState<string | null>(null);
   const [moduleErrors, setModuleErrors] = useState<Record<string, string>>({});
+  const [showShapeSequence, setShowShapeSequence] = useState(false);
+  const [showQuizPage, setShowQuizPage] = useState(false);
 
   // Load progress from localStorage on component mount
   useEffect(() => {
@@ -82,6 +86,28 @@ export function LearningDashboard({ onBack }: LearningDashboardProps) {
 
   const progress = (unlockedModules.length / nmrModules.length) * 100;
   const completedCount = unlockedModules.length;
+
+  const handleBeginQuiz = () => {
+    setShowShapeSequence(true);
+  };
+
+  const handleShapeSequenceClose = () => {
+    setShowShapeSequence(false);
+  };
+
+  const handleShapeSequenceComplete = () => {
+    setShowShapeSequence(false);
+    setShowQuizPage(true);
+  };
+
+  const handleQuizBack = () => {
+    setShowQuizPage(false);
+  };
+
+  // Show quiz page if active
+  if (showQuizPage) {
+    return <QuizPage onBack={handleQuizBack} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4">
@@ -164,6 +190,21 @@ export function LearningDashboard({ onBack }: LearningDashboardProps) {
           })}
         </div>
 
+        {/* Begin Course Quiz Button */}
+        {completedCount === nmrModules.length && (
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={handleBeginQuiz}
+              size="lg"
+              className="bg-primary text-primary-foreground px-8 py-3 text-lg font-semibold"
+              data-testid="button-begin-quiz"
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              Begin Course Quiz
+            </Button>
+          </div>
+        )}
+
         {/* Footer with chemistry decorations */}
         <div className="text-center space-y-2 mt-12 pb-8">
           <div className="flex justify-center space-x-4 text-xs text-muted-foreground/70">
@@ -181,6 +222,13 @@ export function LearningDashboard({ onBack }: LearningDashboardProps) {
             <TestTubes className="w-4 h-4" />
           </p>
         </div>
+
+        {/* Shape Sequence Popup */}
+        <ShapeSequencePopup
+          isOpen={showShapeSequence}
+          onClose={handleShapeSequenceClose}
+          onSequenceComplete={handleShapeSequenceComplete}
+        />
       </div>
     </div>
   );
