@@ -61,9 +61,9 @@ export function HomePage() {
       
       // Handle session-specific setup
       if (code === VALID_SESSION_CODE) {
-        // CHEMWITHJ: Enforce sequential progression (reset to first module only)
+        // CHEMWITHJ: Enforce sequential progression (no modules unlocked initially)
         localStorage.setItem('nmr-progress', JSON.stringify({
-          unlockedModules: ["proton-intro"], // Only first module unlocked
+          unlockedModules: [], // No modules unlocked - each needs its own code
           lastUpdated: new Date().toISOString()
         }));
       } else if (code === OVERRIDE_SESSION_CODE) {
