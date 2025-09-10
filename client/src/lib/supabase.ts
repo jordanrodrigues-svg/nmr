@@ -9,6 +9,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Test database connection on initialization
+console.log('🔗 Initializing Supabase connection...');
+console.log('📍 Supabase URL:', supabaseUrl);
+console.log('🔑 Has API key:', !!supabaseAnonKey);
+
+// Test connection by checking if we can query the database
+supabase.from('game_sessions').select('count(*)', { count: 'exact', head: true })
+  .then(({ data, error, count }) => {
+    if (error) {
+      console.error('❌ Database connection failed:', error.message);
+      console.error('🔍 Error details:', error);
+    } else {
+      console.log('✅ Database connection established successfully!');
+      console.log('📊 Game sessions table accessible, count:', count);
+    }
+  })
+  .catch(err => {
+    console.error('❌ Database connection error:', err);
+  });
+
+// Also test players table
+supabase.from('players').select('count(*)', { count: 'exact', head: true })
+  .then(({ data, error, count }) => {
+    if (error) {
+      console.error('❌ Players table not accessible:', error.message);
+    } else {
+      console.log('✅ Players table accessible, count:', count);
+    }
+  })
+  .catch(err => {
+    console.error('❌ Players table error:', err);
+  });
+
 // Database types
 export interface GameSession {
   id: string;
