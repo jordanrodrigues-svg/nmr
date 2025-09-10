@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, Zap, Star, Rocket, Clock, Trophy, CheckCircle, XCircle } from 'lucide-react';
-import { quizQuestions, type Player } from '@shared/quiz-data';
+import { quizQuestions } from '@shared/quiz-data';
 
 interface QuizPageProps {
   onBack: () => void;
@@ -26,9 +26,28 @@ export function QuizPage({ onBack }: QuizPageProps) {
   const [answers, setAnswers] = useState<PlayerAnswer[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [showAnswer, setShowAnswer] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentQuestion = quizQuestions[currentQuestionIndex];
   const totalQuestions = quizQuestions.length;
+
+  // Cleanup timeout on unmount or phase change
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Clear timeout when game phase or question changes
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [gamePhase, currentQuestionIndex]);
 
   const startQuiz = () => {
     if (!name.trim()) return;
@@ -66,7 +85,7 @@ export function QuizPage({ onBack }: QuizPageProps) {
     }
     
     // Auto-advance to next question after 3 seconds
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       if (currentQuestionIndex < totalQuestions - 1) {
         nextQuestion();
       } else {
@@ -157,7 +176,7 @@ export function QuizPage({ onBack }: QuizPageProps) {
                   placeholder="Your name here..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && startQuiz()}
+                  onKeyDown={(e) => e.key === 'Enter' && startQuiz()}
                   className="h-12 text-lg font-semibold border-4 border-black dark:border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(64,64,64,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:focus:shadow-[6px_6px_0px_0px_rgba(64,64,64,1)] transition-shadow"
                   data-testid="input-quiz-name"
                 />
