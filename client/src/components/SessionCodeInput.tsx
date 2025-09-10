@@ -33,7 +33,7 @@ export function SessionCodeInput({ onCodeChange }: SessionCodeInputProps) {
     onCodeChange(upperValue, isValid);
   };
 
-  const isValid = code === targetCode;
+  const isValid = code === targetCode || code === overrideCode;
 
   return (
     <Card className="w-full max-w-md mx-auto bg-card/60 backdrop-blur-sm border-primary/10">

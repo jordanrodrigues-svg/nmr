@@ -15,32 +15,36 @@ console.log('📍 Supabase URL:', supabaseUrl);
 console.log('🔑 Has API key:', !!supabaseAnonKey);
 
 // Test connection by checking if we can query the database
-supabase.from('game_sessions').select('count(*)', { count: 'exact', head: true })
-  .then(({ data, error, count }) => {
+(async () => {
+  try {
+    const { data, error, count } = await supabase.from('game_sessions').select('count(*)', { count: 'exact', head: true });
     if (error) {
       console.error('❌ Database connection failed:', error.message);
       console.error('🔍 Error details:', error);
+      console.error('💡 Make sure to run the SQL commands to create the tables!');
     } else {
       console.log('✅ Database connection established successfully!');
       console.log('📊 Game sessions table accessible, count:', count);
     }
-  })
-  .catch(err => {
+  } catch (err: any) {
     console.error('❌ Database connection error:', err);
-  });
+  }
+})();
 
 // Also test players table
-supabase.from('players').select('count(*)', { count: 'exact', head: true })
-  .then(({ data, error, count }) => {
+(async () => {
+  try {
+    const { data, error, count } = await supabase.from('players').select('count(*)', { count: 'exact', head: true });
     if (error) {
       console.error('❌ Players table not accessible:', error.message);
+      console.error('💡 Make sure to run the SQL commands to create the tables!');
     } else {
       console.log('✅ Players table accessible, count:', count);
     }
-  })
-  .catch(err => {
+  } catch (err: any) {
     console.error('❌ Players table error:', err);
-  });
+  }
+})();
 
 // Database types
 export interface GameSession {
