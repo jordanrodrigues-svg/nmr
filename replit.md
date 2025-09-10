@@ -20,6 +20,11 @@ A stunning chemistry-themed interactive learning platform where students enter s
 - ✅ Beautiful chemistry-themed homepage with interactive elements
 - ✅ Session code validation (currently hardcoded to "CHEMWITHJ")
 - ✅ Animated molecular background and scrambled text effects
+- ✅ Individual quiz functionality with shape sequence security check
+- ✅ NMR module-based learning system with sequential unlocking
+- ✅ Real-time multiplayer quiz system with WebSocket server
+- ✅ Presenter page at /present for big screen display
+- ✅ HNMR-style scoring graphs for live quiz results
 - ⏳ Needs conversion to static-only architecture
 - ⏳ Supabase integration pending credentials
 

@@ -20,7 +20,21 @@ export function ContentModule({ module, isUnlocked, canUnlock, onUnlock, isUnloc
 
   const handleUnlock = () => {
     if (codeInput.trim()) {
-      onUnlock(codeInput.trim().toUpperCase());
+      const upperCode = codeInput.trim().toUpperCase();
+      
+      // Check for override code that unlocks all content
+      if (upperCode === 'SKIPCONTENT') {
+        const allModules = ["proton-intro", "magnetic-field-tms", "spectrum-peaks", "solvents-shifts", "oh-nh-signals", "forensic-nmr"];
+        localStorage.setItem('nmr-progress', JSON.stringify({
+          unlockedModules: allModules,
+          lastUpdated: new Date().toISOString()
+        }));
+        // Force page refresh to update all modules
+        window.location.reload();
+        return;
+      }
+      
+      onUnlock(upperCode);
       setCodeInput('');
       setShowCodeInput(false);
     }

@@ -4,6 +4,7 @@ import { WelcomeBox } from './WelcomeBox';
 import { SessionCodeInput } from './SessionCodeInput';
 import { ScrambledButton } from './ScrambledButton';
 import { LearningDashboard } from './LearningDashboard';
+import { QuizPage } from './QuizPage';
 import { TestTubes } from 'lucide-react';
 
 // Session persistence utilities
@@ -25,7 +26,9 @@ const isSessionValid = (): boolean => {
 export function HomePage() {
   const [sessionCode, setSessionCode] = useState('');
   const [isCodeValid, setIsCodeValid] = useState(false);
+  const [showModeSelection, setShowModeSelection] = useState(false);
   const [showLearningDashboard, setShowLearningDashboard] = useState(false);
+  const [showMultiplayerQuiz, setShowMultiplayerQuiz] = useState(false);
 
   // Check for existing session on component mount
   useEffect(() => {
@@ -49,20 +52,127 @@ export function HomePage() {
 
   const handleStartLearning = () => {
     if (isCodeValid && isSessionValid()) {
-      setShowLearningDashboard(true);
+      setShowModeSelection(true);
     }
   };
 
+  const handleIndividualLearning = () => {
+    setShowModeSelection(false);
+    setShowLearningDashboard(true);
+  };
+
+  const handleMultiplayerQuiz = () => {
+    setShowModeSelection(false);
+    setShowMultiplayerQuiz(true);
+  };
+
   const handleBackToHome = () => {
+    setShowModeSelection(false);
     setShowLearningDashboard(false);
+    setShowMultiplayerQuiz(false);
     // Clear session when explicitly going back to home
     clearSessionFromStorage();
     setSessionCode('');
     setIsCodeValid(false);
   };
 
+  const handleBackToModeSelection = () => {
+    setShowLearningDashboard(false);
+    setShowMultiplayerQuiz(false);
+    setShowModeSelection(true);
+  };
+
   if (showLearningDashboard) {
-    return <LearningDashboard onBack={handleBackToHome} />;
+    return <LearningDashboard onBack={handleBackToModeSelection} />;
+  }
+
+  if (showMultiplayerQuiz) {
+    return <QuizPage onBack={handleBackToModeSelection} />;
+  }
+
+  // Mode Selection UI
+  if (showModeSelection) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+        {/* Chemistry Background */}
+        <ChemistryBackground />
+        
+        {/* Main Content */}
+        <div className="relative z-10 min-h-screen flex flex-col justify-center items-center p-4">
+          <div className="w-full max-w-2xl bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl p-8 space-y-8">
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <div className="flex justify-center mb-6">
+                <TestTubes className="w-16 h-16 text-blue-400" />
+              </div>
+              <h1 className="text-4xl font-bold text-white">
+                Choose Your Learning Mode
+              </h1>
+              <p className="text-xl text-white/80">
+                How would you like to explore NMR chemistry today?
+              </p>
+            </div>
+
+            {/* Mode Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Individual Learning */}
+              <button
+                onClick={handleIndividualLearning}
+                className="group p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                data-testid="button-individual-learning"
+              >
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-blue-500/30 transition-colors">
+                    <TestTubes className="w-8 h-8 text-blue-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Individual Learning</h3>
+                  <p className="text-white/70">
+                    Learn at your own pace through interactive NMR modules with sequential unlocking
+                  </p>
+                  <div className="bg-blue-500/20 rounded-lg p-3">
+                    <p className="text-sm text-blue-200 font-medium">6 Learning Modules • Progress Tracking</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Multiplayer Quiz */}
+              <button
+                onClick={handleMultiplayerQuiz}
+                className="group p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                data-testid="button-multiplayer-quiz"
+              >
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-green-500/30 transition-colors">
+                    <TestTubes className="w-8 h-8 text-green-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Multiplayer Quiz</h3>
+                  <p className="text-white/70">
+                    Join live quizzes with classmates and see results on the big screen
+                  </p>
+                  <div className="bg-green-500/20 rounded-lg p-3">
+                    <p className="text-sm text-green-200 font-medium">Live Competition • Real-time Results</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Back Button */}
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleBackToHome}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl transition-all duration-300"
+                data-testid="button-back-to-home"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Overlay for better contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20 pointer-events-none z-5"></div>
+      </div>
+    );
   }
 
   return (

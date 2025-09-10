@@ -10,10 +10,25 @@ interface SessionCodeInputProps {
 export function SessionCodeInput({ onCodeChange }: SessionCodeInputProps) {
   const [code, setCode] = useState('');
   const targetCode = 'CHEMWITHJ';
+  const overrideCode = 'SKIPCONTENT';
 
   const handleCodeChange = (value: string) => {
     const upperValue = value.toUpperCase();
     setCode(upperValue);
+    
+    // Check for override code that unlocks all content
+    if (upperValue === overrideCode) {
+      // Unlock all modules immediately
+      const allModules = ["proton-intro", "magnetic-field-tms", "spectrum-peaks", "solvents-shifts", "oh-nh-signals", "forensic-nmr"];
+      localStorage.setItem('nmr-progress', JSON.stringify({
+        unlockedModules: allModules,
+        lastUpdated: new Date().toISOString()
+      }));
+      // Treat as valid to proceed to learning dashboard
+      onCodeChange(upperValue, true);
+      return;
+    }
+    
     const isValid = upperValue === targetCode;
     onCodeChange(upperValue, isValid);
   };
