@@ -35,7 +35,6 @@ export default function PresentPage() {
 
   const resetGame = () => {
     setGamePhase('lobby');
-    setCurrentQuestion(null);
     setCurrentQuestionIndex(0);
     setShowAnswer(false);
   };

@@ -4,7 +4,7 @@ import { WelcomeBox } from './WelcomeBox';
 import { SessionCodeInput } from './SessionCodeInput';
 import { ScrambledButton } from './ScrambledButton';
 import { LearningDashboard } from './LearningDashboard';
-import { QuizPage } from './QuizPage';
+import { MultiplayerQuizPage } from './MultiplayerQuizPage';
 import { TestTubes } from 'lucide-react';
 
 // Session persistence utilities
@@ -87,7 +87,7 @@ export function HomePage() {
   }
 
   if (showMultiplayerQuiz) {
-    return <QuizPage onBack={handleBackToModeSelection} />;
+    return <MultiplayerQuizPage onBack={handleBackToModeSelection} />;
   }
 
   // Mode Selection UI
