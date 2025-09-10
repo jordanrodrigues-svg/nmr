@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 
 interface ScrambledButtonProps {
   isEnabled: boolean;
+  onStartLearning?: () => void;
 }
 
-export function ScrambledButton({ isEnabled }: ScrambledButtonProps) {
+export function ScrambledButton({ isEnabled, onStartLearning }: ScrambledButtonProps) {
   const targetText = 'Let the fun begin!';
   const [displayText, setDisplayText] = useState('Xpz kwv gnm cgdgm!');
   const [isAnimating, setIsAnimating] = useState(false);
@@ -64,7 +65,8 @@ export function ScrambledButton({ isEnabled }: ScrambledButtonProps) {
 
   const handleClick = () => {
     if (isEnabled) {
-      console.log('Let the fun begin! Button clicked - ready for next phase');
+      console.log('Let the fun begin! Starting learning journey...');
+      onStartLearning?.();
     } else {
       console.log('Button clicked but code not entered yet');
     }

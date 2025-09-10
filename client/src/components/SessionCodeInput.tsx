@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { TestTubes, Check } from 'lucide-react';
 
 interface SessionCodeInputProps {
   onCodeChange: (code: string, isValid: boolean) => void;
@@ -54,13 +55,15 @@ export function SessionCodeInput({ onCodeChange }: SessionCodeInputProps) {
             data-testid="input-session-code"
           />
           {code && !isValid && (
-            <p className="text-xs text-muted-foreground text-center animate-pulse">
-              Keep trying... the code is chemistry-related! 🧪
+            <p className="text-xs text-muted-foreground text-center animate-pulse flex items-center justify-center space-x-1">
+              <span>Keep trying... the code is chemistry-related!</span>
+              <TestTubes className="w-3 h-3" />
             </p>
           )}
           {isValid && (
-            <p className="text-xs text-chart-2 text-center font-semibold">
-              Perfect! Code accepted ✓
+            <p className="text-xs text-chart-2 text-center font-semibold flex items-center justify-center space-x-1">
+              <span>Perfect! Code accepted</span>
+              <Check className="w-3 h-3" />
             </p>
           )}
         </div>
