@@ -240,12 +240,14 @@ export function QuizPage({ onBack }: QuizPageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <h2 className="text-xl text-white mb-6" data-testid="text-question">
-                {currentQuestion.question}
-              </h2>
+              <div className="mb-6">
+                <h2 className="text-xl text-white leading-relaxed break-words" data-testid="text-question">
+                  {currentQuestion.question}
+                </h2>
+              </div>
               
-              {/* Answer Options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Answer Options with improved text wrapping */}
+              <div className="grid grid-cols-1 gap-4">
                 {Object.entries(currentQuestion.options).map(([key, value]) => {
                   const isSelected = selectedAnswer === key;
                   const isCorrect = showAnswer && key === currentQuestion.correct;
@@ -256,7 +258,7 @@ export function QuizPage({ onBack }: QuizPageProps) {
                       key={key}
                       onClick={() => !hasAnswered && submitAnswer(key)}
                       disabled={hasAnswered}
-                      className={`p-6 h-auto text-left justify-start ${
+                      className={`p-6 h-auto text-left justify-start min-h-[4rem] ${
                         isCorrect ? 'bg-green-600 hover:bg-green-600' : 
                         isWrong ? 'bg-red-600 hover:bg-red-600' : 
                         isSelected ? 'bg-blue-600 hover:bg-blue-600' : 
@@ -264,11 +266,15 @@ export function QuizPage({ onBack }: QuizPageProps) {
                       } text-white border-white/30`}
                       data-testid={`button-answer-${key}`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <span className="font-bold text-2xl">{key.toUpperCase()}</span>
-                        <span className="text-lg">{value}</span>
-                        {showAnswer && isCorrect && <CheckCircle className="w-6 h-6 text-green-300 ml-auto" />}
-                        {showAnswer && isWrong && <XCircle className="w-6 h-6 text-red-300 ml-auto" />}
+                      <div className="flex items-start space-x-4 w-full">
+                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                          {key.toUpperCase()}
+                        </div>
+                        <span className="text-lg leading-relaxed break-words flex-1 text-left">{value}</span>
+                        <div className="flex-shrink-0">
+                          {showAnswer && isCorrect && <CheckCircle className="w-6 h-6 text-green-300" />}
+                          {showAnswer && isWrong && <XCircle className="w-6 h-6 text-red-300" />}
+                        </div>
                       </div>
                     </Button>
                   );
