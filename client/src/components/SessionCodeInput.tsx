@@ -16,20 +16,8 @@ export function SessionCodeInput({ onCodeChange }: SessionCodeInputProps) {
     const upperValue = value.toUpperCase();
     setCode(upperValue);
     
-    // Check for override code that unlocks all content
-    if (upperValue === overrideCode) {
-      // Unlock all modules immediately
-      const allModules = ["proton-intro", "magnetic-field-tms", "spectrum-peaks", "solvents-shifts", "oh-nh-signals", "forensic-nmr"];
-      localStorage.setItem('nmr-progress', JSON.stringify({
-        unlockedModules: allModules,
-        lastUpdated: new Date().toISOString()
-      }));
-      // Treat as valid to proceed to learning dashboard
-      onCodeChange(upperValue, true);
-      return;
-    }
-    
-    const isValid = upperValue === targetCode;
+    // Check if code is valid (either targetCode or overrideCode)
+    const isValid = upperValue === targetCode || upperValue === overrideCode;
     onCodeChange(upperValue, isValid);
   };
 

@@ -9,18 +9,28 @@ import { TestTubes } from 'lucide-react';
 
 // Session persistence utilities
 const SESSION_STORAGE_KEY = 'chemistry-session-valid';
+const SESSION_CODE_KEY = 'chemistry-session-code';
 const VALID_SESSION_CODE = 'CHEMWITHJ';
+const OVERRIDE_SESSION_CODE = 'SKIPCONTENT';
 
-const saveSessionToStorage = () => {
+const saveSessionToStorage = (code: string) => {
   localStorage.setItem(SESSION_STORAGE_KEY, 'true');
+  localStorage.setItem(SESSION_CODE_KEY, code);
 };
 
 const clearSessionFromStorage = () => {
   localStorage.removeItem(SESSION_STORAGE_KEY);
+  localStorage.removeItem(SESSION_CODE_KEY);
+  // Also clear NMR progress to ensure clean state
+  localStorage.removeItem('nmr-progress');
 };
 
 const isSessionValid = (): boolean => {
   return localStorage.getItem(SESSION_STORAGE_KEY) === 'true';
+};
+
+const getStoredSessionCode = (): string | null => {
+  return localStorage.getItem(SESSION_CODE_KEY);
 };
 
 export function HomePage() {
@@ -33,8 +43,11 @@ export function HomePage() {
   // Check for existing session on component mount
   useEffect(() => {
     if (isSessionValid()) {
-      setSessionCode(VALID_SESSION_CODE);
-      setIsCodeValid(true);
+      const storedCode = getStoredSessionCode();
+      if (storedCode) {
+        setSessionCode(storedCode);
+        setIsCodeValid(true);
+      }
     }
   }, []);
 
@@ -44,7 +57,23 @@ export function HomePage() {
     
     // Save session to localStorage when valid code is entered
     if (isValid) {
-      saveSessionToStorage();
+      saveSessionToStorage(code);
+      
+      // Handle session-specific setup
+      if (code === VALID_SESSION_CODE) {
+        // CHEMWITHJ: Enforce sequential progression (reset to first module only)
+        localStorage.setItem('nmr-progress', JSON.stringify({
+          unlockedModules: ["proton-intro"], // Only first module unlocked
+          lastUpdated: new Date().toISOString()
+        }));
+      } else if (code === OVERRIDE_SESSION_CODE) {
+        // SKIPCONTENT: Unlock all modules immediately
+        const allModules = ["proton-intro", "magnetic-field-tms", "spectrum-peaks", "solvents-shifts", "oh-nh-signals", "forensic-nmr"];
+        localStorage.setItem('nmr-progress', JSON.stringify({
+          unlockedModules: allModules,
+          lastUpdated: new Date().toISOString()
+        }));
+      }
     } else {
       clearSessionFromStorage();
     }
@@ -52,7 +81,14 @@ export function HomePage() {
 
   const handleStartLearning = () => {
     if (isCodeValid && isSessionValid()) {
-      setShowModeSelection(true);
+      // CHEMWITHJ: Force sequential learning progression (no mode selection)
+      if (sessionCode === VALID_SESSION_CODE) {
+        setShowLearningDashboard(true);
+      }
+      // SKIPCONTENT: Show mode selection with all content unlocked
+      else if (sessionCode === OVERRIDE_SESSION_CODE) {
+        setShowModeSelection(true);
+      }
     }
   };
 
@@ -83,7 +119,13 @@ export function HomePage() {
   };
 
   if (showLearningDashboard) {
-    return <LearningDashboard onBack={handleBackToModeSelection} />;
+    // For CHEMWITHJ users, back goes to home (no mode selection)
+    // For SKIPCONTENT users, back goes to mode selection
+    const handleBackFromLearning = sessionCode === VALID_SESSION_CODE 
+      ? handleBackToHome 
+      : handleBackToModeSelection;
+    
+    return <LearningDashboard onBack={handleBackFromLearning} />;
   }
 
   if (showMultiplayerQuiz) {
