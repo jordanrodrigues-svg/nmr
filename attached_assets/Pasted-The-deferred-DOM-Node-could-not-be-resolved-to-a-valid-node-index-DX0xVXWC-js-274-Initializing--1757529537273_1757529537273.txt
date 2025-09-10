@@ -1,0 +1,51 @@
+The deferred DOM Node could not be resolved to a valid node.
+index-DX0xVXWC.js:274 🔗 Initializing Supabase connection...
+index-DX0xVXWC.js:274 📍 Supabase URL: https://sxnsvwlxlzqinqhdklyx.supabase.co
+index-DX0xVXWC.js:274 🔑 Has API key: true
+index-DX0xVXWC.js:272  HEAD https://sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/game_sessions?select=count%28*%29 400 (Bad Request)
+(anonymous) @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+a @ index-DX0xVXWC.js:272
+Promise.then
+c @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+qS @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+then @ index-DX0xVXWC.js:250
+(anonymous) @ index-DX0xVXWC.js:274
+index-DX0xVXWC.js:274 ❌ Database connection failed: 
+(anonymous) @ index-DX0xVXWC.js:274
+Promise.then
+then @ index-DX0xVXWC.js:250
+(anonymous) @ index-DX0xVXWC.js:274
+index-DX0xVXWC.js:274 🔍 Error details: {message: ''}
+(anonymous) @ index-DX0xVXWC.js:274
+Promise.then
+then @ index-DX0xVXWC.js:250
+(anonymous) @ index-DX0xVXWC.js:274
+index-DX0xVXWC.js:272  HEAD https://sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/players?select=count%28*%29 400 (Bad Request)
+(anonymous) @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+a @ index-DX0xVXWC.js:272
+Promise.then
+c @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+qS @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+then @ index-DX0xVXWC.js:250
+(anonymous) @ index-DX0xVXWC.js:274
+index-DX0xVXWC.js:274 ❌ Players table not accessible: 
+(anonymous) @ index-DX0xVXWC.js:274
+Promise.then
+then @ index-DX0xVXWC.js:250
+(anonymous) @ index-DX0xVXWC.js:274
+index-DX0xVXWC.js:272  GET https://sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/game_sessions?select=*&session_code=eq.CHEMWITHJ 406 (Not Acceptable)
+(anonymous) @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+a @ index-DX0xVXWC.js:272
+Promise.then
+c @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+qS @ index-DX0xVXWC.js:272
+(anonymous) @ index-DX0xVXWC.js:272
+then @ index-DX0xVXWC.js:250
