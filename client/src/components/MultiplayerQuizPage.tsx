@@ -39,27 +39,12 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
     if (!name.trim()) return;
     
     try {
-      // Get or create the game session for CHEMWITHJ
+      // Only join existing sessions - do not auto-create (instructor must create from /present)
       let session = await getGameSession('CHEMWITHJ');
       
       if (!session) {
-        // Create session if it doesn't exist (this would typically be done by presenter)
-        const { data, error } = await supabase
-          .from('game_sessions')
-          .insert({
-            session_code: 'CHEMWITHJ',
-            phase: 'lobby',
-            current_question: 0
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        session = data;
-      }
-      
-      if (!session) {
-        throw new Error('Failed to create or find session');
+        alert('No active session found. Ask your instructor to start the quiz from the presenter screen (/present)');
+        return;
       }
       
       setGameSession(session);

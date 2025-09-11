@@ -129,7 +129,13 @@ export function HomePage() {
   }
 
   if (showMultiplayerQuiz) {
-    return <MultiplayerQuizPage onBack={handleBackToModeSelection} />;
+    // For CHEMWITHJ users, back goes to home (no mode selection)
+    // For SKIPCONTENT users, back goes to mode selection  
+    const handleBackFromQuiz = sessionCode === VALID_SESSION_CODE 
+      ? handleBackToHome 
+      : handleBackToModeSelection;
+    
+    return <MultiplayerQuizPage onBack={handleBackFromQuiz} />;
   }
 
   // Mode Selection UI
