@@ -94,6 +94,11 @@ export async function getGameSession(sessionCode: string): Promise<GameSession |
 }
 
 export async function updateGameSession(sessionId: string, updates: Partial<GameSession>) {
+  // Debug logging for troubleshooting constraint violations
+  console.log('🔄 updateGameSession called with:');
+  console.log('📍 sessionId:', sessionId);
+  console.log('📝 updates:', JSON.stringify(updates, null, 2));
+  
   const { data, error } = await supabase
     .from('game_sessions')
     .update(updates)
@@ -101,7 +106,17 @@ export async function updateGameSession(sessionId: string, updates: Partial<Game
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('❌ updateGameSession error details:');
+    console.error('🔍 Error object:', JSON.stringify(error, null, 2));
+    console.error('📄 Error message:', error.message);
+    console.error('🏷️ Error code:', error.code);
+    console.error('💾 Error details:', error.details);
+    console.error('🔗 Error hint:', error.hint);
+    throw error;
+  }
+  
+  console.log('✅ updateGameSession successful:', JSON.stringify(data, null, 2));
   return data;
 }
 

@@ -6,7 +6,7 @@ ALTER TABLE IF EXISTS public.players ENABLE ROW LEVEL SECURITY;
 CREATE TABLE IF NOT EXISTS public.game_sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_code VARCHAR(50) UNIQUE NOT NULL,
-  phase VARCHAR(20) DEFAULT 'lobby' CHECK (phase IN ('lobby', 'quiz', 'results')),
+  phase VARCHAR(20) DEFAULT 'lobby' CHECK (phase IN ('lobby', 'countdown', 'quiz', 'results')),
   current_question INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

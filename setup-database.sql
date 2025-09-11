@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS game_sessions (
     id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
     session_code text NOT NULL UNIQUE,
-    phase text NOT NULL DEFAULT 'lobby' CHECK (phase IN ('lobby', 'quiz', 'results')),
+    phase text NOT NULL DEFAULT 'lobby' CHECK (phase IN ('lobby', 'countdown', 'quiz', 'results')),
     current_question integer DEFAULT 0,
     created_at timestamp DEFAULT now(),
     updated_at timestamp DEFAULT now()
