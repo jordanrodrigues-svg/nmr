@@ -24,6 +24,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
   const sessionSubscription = useRef<any>(null);
   const playersSubscription = useRef<any>(null);
   const lastPhaseRef = useRef<string>('lobby');
+  const lastQuestionIndexRef = useRef<number | null>(null);
   const countdownRef = useRef<boolean>(false);
   const countdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -69,6 +70,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       if (session.phase === 'quiz') {
         setGamePhase('quiz');
         setCurrentQuestion(quizQuestions[session.current_question]);
+        lastQuestionIndexRef.current = session.current_question;
         setSelectedAnswer('');
         setHasAnswered(false);
       } else if (session.phase === 'results') {
@@ -91,6 +93,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         
         // Check if transitioning from lobby/waiting to quiz
         if (lastPhaseRef.current === 'lobby' && updatedSession.phase === 'quiz' && !countdownRef.current) {
+          console.log('🎬 [Student] Starting countdown transition');
           // Trigger countdown animation
           countdownRef.current = true;
           setGamePhase('countdown');
@@ -111,11 +114,13 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
           countdownTimeoutRef.current = setTimeout(() => {
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             setGamePhase('quiz');
-            setCurrentQuestion(quizQuestions[updatedSession.current_question]);
-            // Only reset answer state for new questions
-            if (gameSession && updatedSession.current_question !== gameSession.current_question) {
+            const questionIndex = updatedSession.current_question;
+            if (lastQuestionIndexRef.current !== questionIndex) {
+              console.log('🔄 [Student] New question via countdown:', questionIndex);
+              setCurrentQuestion(quizQuestions[questionIndex]);
               setSelectedAnswer('');
               setHasAnswered(false);
+              lastQuestionIndexRef.current = questionIndex;
             }
             countdownRef.current = false;
           }, 3000);
@@ -123,11 +128,15 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         } else if (updatedSession.phase === 'quiz' && !countdownRef.current) {
           // Direct transition to quiz (no countdown for late joiners or subsequent questions)
           setGamePhase('quiz');
-          setCurrentQuestion(quizQuestions[updatedSession.current_question]);
-          // Only reset answer state if it's a NEW question
-          if (gameSession && updatedSession.current_question !== gameSession.current_question) {
+          const questionIndex = updatedSession.current_question;
+          if (lastQuestionIndexRef.current !== questionIndex) {
+            console.log('🔄 [Student] New question via subscription:', questionIndex);
+            setCurrentQuestion(quizQuestions[questionIndex]);
             setSelectedAnswer('');
             setHasAnswered(false);
+            lastQuestionIndexRef.current = questionIndex;
+          } else {
+            console.log('🔄 [Student] Same question, preserving answer state');
           }
         } else if (updatedSession.phase === 'results') {
           setGamePhase('results');
@@ -143,12 +152,12 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         setPlayers(updatedPlayers);
       });
 
-      // Add polling fallback for session updates (every 2 seconds for students)
+      // Add polling fallback for session updates (every 1 second for students)
       const pollInterval = setInterval(async () => {
         try {
           const currentSession = await getGameSession('CHEMWITHJ');
-          if (currentSession && (currentSession.phase !== gameSession?.phase || currentSession.current_question !== gameSession?.current_question)) {
-            console.log('🔄 [Student] Polling detected session change:', currentSession.phase, 'Question:', currentSession.current_question);
+          if (currentSession && (currentSession.phase !== lastPhaseRef.current || currentSession.current_question !== lastQuestionIndexRef.current)) {
+            console.log('🔄 [Student] Polling detected change - Phase:', currentSession.phase, 'Question:', currentSession.current_question);
             
             // Manually trigger the same logic as the subscription
             if (lastPhaseRef.current === 'lobby' && currentSession.phase === 'quiz' && !countdownRef.current) {
@@ -174,10 +183,13 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                 if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
                 setGamePhase('quiz');
                 setCurrentQuestion(quizQuestions[currentSession.current_question]);
-                // Only reset answer state for new questions
-                if (gameSession && currentSession.current_question !== gameSession.current_question) {
+                // Only reset answer state for new questions using stable ref
+                const questionIndex = currentSession.current_question;
+                if (lastQuestionIndexRef.current !== questionIndex) {
+                  console.log('🔄 [Student] New question via polling countdown:', questionIndex);
                   setSelectedAnswer('');
                   setHasAnswered(false);
+                  lastQuestionIndexRef.current = questionIndex;
                 }
                 countdownRef.current = false;
               }, 3000);
@@ -185,14 +197,15 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
             } else if (currentSession.phase === 'quiz' && !countdownRef.current) {
               // Direct transition to quiz (no countdown for late joiners or subsequent questions)
               setGamePhase('quiz');
-              setCurrentQuestion(quizQuestions[currentSession.current_question]);
-              // Only reset answer state if it's a NEW question, not phase changes
-              if (gameSession && currentSession.current_question !== gameSession.current_question) {
-                console.log('🔄 [Student] New question detected, resetting answer state');
+              const questionIndex = currentSession.current_question;
+              if (lastQuestionIndexRef.current !== questionIndex) {
+                console.log('🔄 [Student] New question via polling:', questionIndex);
+                setCurrentQuestion(quizQuestions[questionIndex]);
                 setSelectedAnswer('');
                 setHasAnswered(false);
+                lastQuestionIndexRef.current = questionIndex;
               } else {
-                console.log('🔄 [Student] Same question, keeping answer state');
+                console.log('🔄 [Student] Same question, preserving answer state');
               }
             } else if (currentSession.phase === 'results') {
               setGamePhase('results');
@@ -204,7 +217,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         } catch (error) {
           console.error('❌ [Student] Session polling failed:', error);
         }
-      }, 2000);
+      }, 1000);
 
       // Store interval for cleanup
       sessionPollingRef.current = pollInterval;
@@ -554,8 +567,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
               <div className="grid grid-cols-1 gap-4">
                 {Object.entries(currentQuestion.options).map(([key, value]) => {
                   const isSelected = selectedAnswer === key;
-                  const isCorrect = hasAnswered && key === currentQuestion.correct;
-                  // Remove wrong answer highlighting - students should not see wrong answers
+                  // NO correctness-based styling or feedback - neutral UI only
                   
                   return (
                     <Button
@@ -563,7 +575,6 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                       onClick={() => !hasAnswered && submitAnswer(key)}
                       disabled={hasAnswered}
                       className={`p-6 h-auto text-left justify-start min-h-[4rem] ${
-                        isCorrect ? 'bg-green-600 hover:bg-green-600' : 
                         isSelected ? 'bg-blue-600 hover:bg-blue-600' : 
                         'bg-white/20 hover:bg-white/30'
                       } text-white border-white/30`}
@@ -574,9 +585,6 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                           {key.toUpperCase()}
                         </div>
                         <span className="text-lg leading-relaxed break-words flex-1 text-left">{value as string}</span>
-                        <div className="flex-shrink-0">
-                          {hasAnswered && isCorrect && <CheckCircle className="w-6 h-6 text-green-300" />}
-                        </div>
                       </div>
                     </Button>
                   );
@@ -586,7 +594,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
               {hasAnswered && (
                 <div className="mt-6 p-4 bg-white/20 rounded-lg">
                   <p className="text-white text-center">
-                    {selectedAnswer === currentQuestion.correct ? '🎉 Correct!' : 'Answer submitted!'}
+                    Answer submitted!
                   </p>
                   <p className="text-white/60 text-center mt-2">
                     Waiting for next question...
