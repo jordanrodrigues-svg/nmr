@@ -81,9 +81,9 @@ export function HomePage() {
 
   const handleStartLearning = () => {
     if (isCodeValid && isSessionValid()) {
-      // CHEMWITHJ: Show mode selection (multiplayer quiz is primary, individual learning is backup)
+      // CHEMWITHJ: Go directly to multiplayer quiz (real-time system)
       if (sessionCode === VALID_SESSION_CODE) {
-        setShowModeSelection(true);
+        setShowMultiplayerQuiz(true);
       }
       // SKIPCONTENT: Show mode selection with all content unlocked
       else if (sessionCode === OVERRIDE_SESSION_CODE) {
@@ -157,27 +157,7 @@ export function HomePage() {
 
             {/* Mode Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Multiplayer Quiz - Primary Option */}
-              <button
-                onClick={handleMultiplayerQuiz}
-                className="group p-6 bg-green-500/10 rounded-2xl border border-green-500/30 hover:bg-green-500/20 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                data-testid="button-multiplayer-quiz"
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-green-500/30 transition-colors">
-                    <TestTubes className="w-8 h-8 text-green-300" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">Join Live Quiz</h3>
-                  <p className="text-white/70">
-                    Connect with your classmates and compete in real-time quizzes
-                  </p>
-                  <div className="bg-green-500/20 rounded-lg p-3">
-                    <p className="text-sm text-green-200 font-medium">✨ Primary Mode • Live Competition</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Individual Learning - Backup/Failsafe Option */}
+              {/* Individual Learning */}
               <button
                 onClick={handleIndividualLearning}
                 className="group p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl"
@@ -187,12 +167,32 @@ export function HomePage() {
                   <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-blue-500/30 transition-colors">
                     <TestTubes className="w-8 h-8 text-blue-300" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Game Not Starting?</h3>
+                  <h3 className="text-2xl font-bold text-white">Individual Learning</h3>
                   <p className="text-white/70">
-                    Ask your host and click here for individual learning mode
+                    Learn at your own pace through interactive NMR modules with sequential unlocking
                   </p>
                   <div className="bg-blue-500/20 rounded-lg p-3">
-                    <p className="text-sm text-blue-200 font-medium">🔧 Backup Mode • Solo Learning</p>
+                    <p className="text-sm text-blue-200 font-medium">6 Learning Modules • Progress Tracking</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Multiplayer Quiz */}
+              <button
+                onClick={handleMultiplayerQuiz}
+                className="group p-6 bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                data-testid="button-multiplayer-quiz"
+              >
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-green-500/30 transition-colors">
+                    <TestTubes className="w-8 h-8 text-green-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Multiplayer Quiz</h3>
+                  <p className="text-white/70">
+                    Join live quizzes with classmates and see results on the big screen
+                  </p>
+                  <div className="bg-green-500/20 rounded-lg p-3">
+                    <p className="text-sm text-green-200 font-medium">Live Competition • Real-time Results</p>
                   </div>
                 </div>
               </button>
