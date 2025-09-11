@@ -11,6 +11,7 @@ export default function PresentPageFull() {
   const [showAnswer, setShowAnswer] = useState(false);
   const sessionSubscription = useRef<any>(null);
   const playersSubscription = useRef<any>(null);
+  const pollInterval = useRef<any>(null);
 
   const currentQuestion = gameSession && gameSession.phase === 'quiz' ? quizQuestions[gameSession.current_question] : null;
 
@@ -23,6 +24,9 @@ export default function PresentPageFull() {
       }
       if (playersSubscription.current) {
         playersSubscription.current.unsubscribe();
+      }
+      if (pollInterval.current) {
+        clearInterval(pollInterval.current);
       }
     };
   }, []);
@@ -44,8 +48,22 @@ export default function PresentPageFull() {
       
       // Subscribe to players updates
       playersSubscription.current = subscribeToPlayers(session.id, (updatedPlayers) => {
+        console.log('🎯 [Presenter] Players list updated:', updatedPlayers);
+        console.log('🎯 [Presenter] Player count:', updatedPlayers.length);
         setPlayers(updatedPlayers);
       });
+      
+      // Fallback polling for player updates (every 3 seconds)
+      const { getSessionPlayers } = await import('@/lib/supabase');
+      pollInterval.current = setInterval(async () => {
+        try {
+          const currentPlayers = await getSessionPlayers(session.id);
+          console.log('🔄 [Presenter] Polling - Current players:', currentPlayers.length);
+          setPlayers(currentPlayers);
+        } catch (error) {
+          console.error('❌ [Presenter] Polling failed:', error);
+        }
+      }, 3000);
       
     } catch (error) {
       console.error('Error initializing session:', error);

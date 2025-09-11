@@ -50,7 +50,9 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       setGameSession(session);
       
       // Join the game
+      console.log('🎮 Attempting to join game with session ID:', session.id, 'and name:', name.trim());
       const player = await joinGame(session.id, name.trim());
+      console.log('✅ Player joined successfully:', player);
       setCurrentPlayer(player);
       
       // Subscribe to session updates
@@ -69,6 +71,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       
       // Subscribe to players updates
       playersSubscription.current = subscribeToPlayers(session.id, (updatedPlayers) => {
+        console.log('🔄 Players list updated:', updatedPlayers);
         setPlayers(updatedPlayers);
       });
       
@@ -98,6 +101,31 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
     
     const newScore = currentPlayer.score + (isCorrect ? 1 : 0);
     
+    // Handle offline mode (when session_code is 'OFFLINE')
+    if (gameSession.session_code === 'OFFLINE') {
+      setCurrentPlayer({ ...currentPlayer, score: newScore, answers: updatedAnswers });
+      
+      // Auto-advance to next question after 2 seconds in offline mode
+      setTimeout(() => {
+        const nextQuestionIndex = gameSession.current_question + 1;
+        if (nextQuestionIndex < quizQuestions.length) {
+          // Move to next question
+          setGameSession({
+            ...gameSession,
+            current_question: nextQuestionIndex
+          });
+          setCurrentQuestion(quizQuestions[nextQuestionIndex]);
+          setSelectedAnswer('');
+          setHasAnswered(false);
+        } else {
+          // Quiz finished - show results
+          setGamePhase('results');
+        }
+      }, 2000);
+      return;
+    }
+    
+    // Online mode - update via Supabase
     try {
       await updatePlayerScore(currentPlayer.id, newScore, updatedAnswers);
       setCurrentPlayer({ ...currentPlayer, score: newScore, answers: updatedAnswers });
@@ -269,11 +297,35 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                   {/* Discrete failsafe link */}
                   <div className="text-center">
                     <button
-                      onClick={() => window.location.href = '/'}
+                      onClick={() => {
+                        // Start quiz in passive mode (offline without real-time functionality)
+                        setGamePhase('quiz');
+                        setCurrentQuestion(quizQuestions[0]);
+                        setSelectedAnswer('');
+                        setHasAnswered(false);
+                        // Create offline session
+                        setGameSession({
+                          id: 'offline',
+                          session_code: 'OFFLINE',
+                          phase: 'quiz',
+                          current_question: 0,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString()
+                        });
+                        setCurrentPlayer({
+                          id: 'offline-player',
+                          session_id: 'offline',
+                          name: name.trim() || 'Student',
+                          score: 0,
+                          answers: [],
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString()
+                        });
+                      }}
                       className="text-white/50 hover:text-white/70 text-xs underline transition-colors"
                       data-testid="link-failsafe-backup"
                     >
-                      Game not starting? Ask your host and click here
+                      Game not starting? Click here for offline mode
                     </button>
                   </div>
                 </div>

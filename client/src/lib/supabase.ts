@@ -147,24 +147,56 @@ export async function updatePlayerScore(playerId: string, score: number, answers
 
 // Real-time subscriptions
 export function subscribeToGameSession(sessionId: string, callback: (session: GameSession) => void) {
-  return supabase
-    .channel(`game_session_${sessionId}`)
+  console.log('🔗 Setting up session subscription for:', sessionId);
+  
+  const channel = supabase
+    .channel(`session-${sessionId}`)
     .on('postgres_changes', 
       { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
-      (payload) => callback(payload.new as GameSession)
+      (payload) => {
+        console.log('📡 Session update received:', payload.new);
+        callback(payload.new as GameSession);
+      }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('🔌 Session subscription status:', status);
+    });
+    
+  return channel;
 }
 
 export function subscribeToPlayers(sessionId: string, callback: (players: Player[]) => void) {
-  return supabase
-    .channel(`players_${sessionId}`)
+  console.log('🔗 Setting up players subscription for session:', sessionId);
+  
+  // Get initial players immediately
+  (async () => {
+    try {
+      const initialPlayers = await getSessionPlayers(sessionId);
+      console.log('📊 Initial players loaded:', initialPlayers);
+      callback(initialPlayers);
+    } catch (error) {
+      console.error('❌ Failed to load initial players:', error);
+    }
+  })();
+  
+  const channel = supabase
+    .channel(`players-${sessionId}`)
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${sessionId}` },
-      async () => {
-        const players = await getSessionPlayers(sessionId);
-        callback(players);
+      async (payload) => {
+        console.log('📡 Players table change detected:', payload);
+        try {
+          const players = await getSessionPlayers(sessionId);
+          console.log('🔄 Fetched updated players:', players);
+          callback(players);
+        } catch (error) {
+          console.error('❌ Failed to fetch updated players:', error);
+        }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('🔌 Players subscription status:', status);
+    });
+    
+  return channel;
 }
