@@ -50,7 +50,7 @@ console.log('🔑 Has API key:', !!supabaseAnonKey);
 export interface GameSession {
   id: string;
   session_code: string;
-  phase: 'lobby' | 'quiz' | 'results';
+  phase: 'lobby' | 'countdown' | 'quiz' | 'results';
   current_question: number;
   created_at: string;
   updated_at: string;

@@ -73,14 +73,34 @@ export default function PresentPageFull() {
   const startQuiz = async () => {
     if (!gameSession) return;
     
+    console.log('🚀 [Presenter] Starting quiz for session:', gameSession.id);
+    console.log('🚀 [Presenter] Current players count:', players.length);
+    
     try {
+      // Start countdown phase first (3 seconds)
       await updateGameSession(gameSession.id, { 
-        phase: 'quiz',
+        phase: 'countdown',
         current_question: 0
       });
+      
+      console.log('⏱️ [Presenter] Countdown started - students will see countdown');
+      
+      // After 4 seconds, start the actual quiz
+      setTimeout(async () => {
+        try {
+          await updateGameSession(gameSession.id, { 
+            phase: 'quiz',
+            current_question: 0
+          });
+          console.log('✅ [Presenter] Quiz started!');
+        } catch (error) {
+          console.error('❌ [Presenter] Error starting quiz phase:', error);
+        }
+      }, 4000);
+      
       setShowAnswer(false);
     } catch (error) {
-      console.error('Error starting quiz:', error);
+      console.error('❌ [Presenter] Error starting countdown:', error);
     }
   };
 
@@ -172,8 +192,7 @@ export default function PresentPageFull() {
 
             <div className="flex space-x-4">
               <Button 
-                onClick={startQuiz} 
-                disabled={players.length === 0}
+                onClick={startQuiz}
                 size="lg"
                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-xl"
                 data-testid="button-start-quiz-presenter"

@@ -12,7 +12,8 @@ interface MultiplayerQuizPageProps {
 
 export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
   const [name, setName] = useState('');
-  const [gamePhase, setGamePhase] = useState<'join' | 'waiting' | 'quiz' | 'results'>('join');
+  const [gamePhase, setGamePhase] = useState<'join' | 'waiting' | 'countdown' | 'quiz' | 'results'>('join');
+  const [countdown, setCountdown] = useState(3);
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
@@ -59,7 +60,26 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       sessionSubscription.current = subscribeToGameSession(session.id, (updatedSession) => {
         setGameSession(updatedSession);
         
-        if (updatedSession.phase === 'quiz') {
+        if (updatedSession.phase === 'countdown') {
+          setGamePhase('countdown');
+          setCountdown(3);
+          // Start countdown animation with proper cleanup
+          let countdownTimer = 3;
+          let countdownInterval: NodeJS.Timeout;
+          
+          countdownInterval = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+            if (countdownTimer <= 0) {
+              clearInterval(countdownInterval);
+            }
+          }, 1000);
+          
+          // Store interval for cleanup if component unmounts or phase changes
+          setTimeout(() => {
+            if (countdownInterval) clearInterval(countdownInterval);
+          }, 4000);
+        } else if (updatedSession.phase === 'quiz') {
           setGamePhase('quiz');
           setCurrentQuestion(quizQuestions[updatedSession.current_question]);
           setSelectedAnswer('');
@@ -333,6 +353,80 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  // Countdown Phase - Fun animation before quiz starts!
+  if (gamePhase === 'countdown') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-red-900 p-6 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          {/* Floating chemistry elements */}
+          <div className="absolute top-10 left-10 w-16 h-16 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute top-20 right-20 w-12 h-12 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-20 left-20 w-20 h-20 bg-green-400 rounded-full animate-spin" style={{ animationDelay: '1.5s' }}></div>
+          <div className="absolute bottom-40 right-40 w-14 h-14 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 left-1/4 w-10 h-10 bg-orange-400 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+          <div className="absolute top-1/3 right-1/3 w-18 h-18 bg-indigo-400 rounded-full animate-spin" style={{ animationDelay: '1.2s' }}></div>
+        </div>
+
+        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center">
+          {/* Main countdown display */}
+          <div className="text-center space-y-8">
+            {/* Quiz starting message */}
+            <div className="space-y-4">
+              <h1 className="text-6xl font-black text-white animate-pulse">
+                🚀 QUIZ STARTING! 🚀
+              </h1>
+              <p className="text-2xl text-yellow-300 font-bold animate-bounce">
+                Get ready to show your chemistry knowledge!
+              </p>
+            </div>
+
+            {/* Countdown number with massive animation */}
+            <div className="relative">
+              {countdown > 0 ? (
+                <div 
+                  key={countdown}
+                  className="text-[20rem] font-black text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.5)] animate-pulse"
+                  style={{
+                    textShadow: '0 0 100px #ff6b6b, 0 0 200px #ff6b6b, 0 0 300px #ff6b6b',
+                    animation: 'countdownPulse 1s ease-in-out'
+                  }}
+                >
+                  {countdown}
+                </div>
+              ) : (
+                <div className="text-8xl font-black text-green-400 animate-bounce">
+                  ✨ GO! ✨
+                </div>
+              )}
+            </div>
+
+            {/* Player info */}
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 border-2 border-white/30">
+              <p className="text-xl text-white font-bold">
+                Ready, <span className="text-yellow-300">{name}</span>? 
+              </p>
+              <p className="text-white/80">
+                {players.length} student{players.length !== 1 ? 's' : ''} in this epic chemistry battle!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Custom CSS for countdown animation */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes countdownPulse {
+              0% { transform: scale(0.8); opacity: 0.5; }
+              50% { transform: scale(1.2); opacity: 1; }
+              100% { transform: scale(1); opacity: 0.9; }
+            }
+          `
+        }} />
       </div>
     );
   }
