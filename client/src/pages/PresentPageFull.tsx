@@ -78,11 +78,16 @@ export default function PresentPageFull() {
     
     try {
       // Students will automatically see countdown when phase changes to quiz
-      await updateGameSession(gameSession.id, { 
+      const updatedSession = await updateGameSession(gameSession.id, { 
         phase: 'quiz',
         current_question: 0
       });
       console.log('✅ [Presenter] Quiz started - students will see countdown!');
+      
+      // Manual fallback: Update local state immediately in case subscription is slow
+      console.log('🔄 [Presenter] Manually updating local session state as fallback');
+      setGameSession(updatedSession);
+      
       setShowAnswer(false);
     } catch (error) {
       console.error('❌ [Presenter] Error starting quiz:', error);

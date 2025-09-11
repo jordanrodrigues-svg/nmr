@@ -1,0 +1,60 @@
+index-DvtaqM5Y.js:274 🔗 Initializing Supabase connection...
+index-DvtaqM5Y.js:274 📍 Supabase URL: https://sxnsvwlxlzqinqhdklyx.supabase.co
+index-DvtaqM5Y.js:274 🔑 Has API key: true
+index-DvtaqM5Y.js:274 ✅ Players table accessible, count: 0
+index-DvtaqM5Y.js:274 ✅ Database connection established successfully!
+index-DvtaqM5Y.js:274 📊 Game sessions table accessible, count: 1
+index-DvtaqM5Y.js:274 🔗 Setting up session subscription for: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:274 🔗 Setting up players subscription for session: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:274 📊 Initial players loaded: []
+index-DvtaqM5Y.js:280 🎯 [Presenter] Players list updated: []
+index-DvtaqM5Y.js:280 🎯 [Presenter] Player count: 0
+index-DvtaqM5Y.js:274 🔌 Session subscription status: SUBSCRIBED
+index-DvtaqM5Y.js:274 🔌 Players subscription status: SUBSCRIBED
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 0
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 0
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 0
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 0
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🚀 [Presenter] Starting quiz for session: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:280 🚀 [Presenter] Current players count: 1
+index-DvtaqM5Y.js:274 🔄 updateGameSession called with:
+index-DvtaqM5Y.js:274 📍 sessionId: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:274 📝 updates: {
+  "phase": "quiz",
+  "current_question": 0
+}
+index-DvtaqM5Y.js:274 ✅ updateGameSession successful: {
+  "id": "8d80b498-8000-498b-8db7-e0c0f968cdc1",
+  "session_code": "CHEMWITHJ",
+  "phase": "quiz",
+  "current_question": 0,
+  "created_at": "2025-09-11T17:53:54.151364",
+  "updated_at": "2025-09-11T17:53:54.151364"
+}
+index-DvtaqM5Y.js:280 ✅ [Presenter] Quiz started - students will see countdown!
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1
+index-DvtaqM5Y.js:280 🚀 [Presenter] Starting quiz for session: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:280 🚀 [Presenter] Current players count: 1
+index-DvtaqM5Y.js:274 🔄 updateGameSession called with:
+index-DvtaqM5Y.js:274 📍 sessionId: 8d80b498-8000-498b-8db7-e0c0f968cdc1
+index-DvtaqM5Y.js:274 📝 updates: {
+  "phase": "quiz",
+  "current_question": 0
+}
+index-DvtaqM5Y.js:274 ✅ updateGameSession successful: {
+  "id": "8d80b498-8000-498b-8db7-e0c0f968cdc1",
+  "session_code": "CHEMWITHJ",
+  "phase": "quiz",
+  "current_question": 0,
+  "created_at": "2025-09-11T17:53:54.151364",
+  "updated_at": "2025-09-11T17:53:54.151364"
+}
+index-DvtaqM5Y.js:280 ✅ [Presenter] Quiz started - students will see countdown!
+index-DvtaqM5Y.js:280 🔄 [Presenter] Polling - Current players: 1

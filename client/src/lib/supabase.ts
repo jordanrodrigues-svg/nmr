@@ -169,12 +169,19 @@ export function subscribeToGameSession(sessionId: string, callback: (session: Ga
     .on('postgres_changes', 
       { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
       (payload) => {
-        console.log('📡 Session update received:', payload.new);
+        console.log('📡 [Subscription] Session update received:', payload.new);
+        console.log('📡 [Subscription] Event type:', payload.eventType);
+        console.log('📡 [Subscription] Full payload:', payload);
         callback(payload.new as GameSession);
       }
     )
     .subscribe((status) => {
-      console.log('🔌 Session subscription status:', status);
+      console.log('🔌 [Subscription] Session subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ [Subscription] Real-time subscription is active');
+      } else if (status === 'SUBSCRIPTION_ERROR') {
+        console.error('❌ [Subscription] Subscription failed');
+      }
     });
     
   return channel;
