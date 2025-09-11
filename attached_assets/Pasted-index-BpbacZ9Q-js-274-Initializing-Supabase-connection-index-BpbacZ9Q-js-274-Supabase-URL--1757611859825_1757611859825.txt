@@ -1,0 +1,32 @@
+index-BpbacZ9Q.js:274 🔗 Initializing Supabase connection...
+index-BpbacZ9Q.js:274 📍 Supabase URL: https://sxnsvwlxlzqinqhdklyx.supabase.co
+index-BpbacZ9Q.js:274 🔑 Has API key: true
+index-BpbacZ9Q.js:274 🔗 Setting up session subscription for: 8420d4f2-194f-4cca-97d0-0fa265f126ad
+index-BpbacZ9Q.js:274 🔗 Setting up players subscription for session: 8420d4f2-194f-4cca-97d0-0fa265f126ad
+index-BpbacZ9Q.js:274 ✅ Players table accessible, count: 1
+index-BpbacZ9Q.js:274 📊 Initial players loaded: Array(1)
+index-BpbacZ9Q.js:280 🎯 [Presenter] Players list updated: Array(1)
+index-BpbacZ9Q.js:280 🎯 [Presenter] Player count: 1
+index-BpbacZ9Q.js:274 ✅ Database connection established successfully!
+index-BpbacZ9Q.js:274 📊 Game sessions table accessible, count: 1
+index-BpbacZ9Q.js:274 🔌 Session subscription status: SUBSCRIBED
+index-BpbacZ9Q.js:274 🔌 Players subscription status: SUBSCRIBED
+index-BpbacZ9Q.js:280 🚀 [Presenter] Starting quiz for session: 8420d4f2-194f-4cca-97d0-0fa265f126ad
+index-BpbacZ9Q.js:280 🚀 [Presenter] Current players count: 1
+sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/game_sessions?id=eq.8420d4f2-194f-4cca-97d0-0fa265f126ad&select=*:1  Failed to load resource: the server responded with a status of 400 ()
+index-BpbacZ9Q.js:280 ❌ [Presenter] Error starting countdown: Object
+h @ index-BpbacZ9Q.js:280
+index-BpbacZ9Q.js:280 🚀 [Presenter] Starting quiz for session: 8420d4f2-194f-4cca-97d0-0fa265f126ad
+index-BpbacZ9Q.js:280 🚀 [Presenter] Current players count: 1
+sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/game_sessions?id=eq.8420d4f2-194f-4cca-97d0-0fa265f126ad&select=*:1  Failed to load resource: the server responded with a status of 400 ()
+index-BpbacZ9Q.js:280 🚀 [Presenter] Starting quiz for session: 8420d4f2-194f-4cca-97d0-0fa265f126ad
+index-BpbacZ9Q.js:280 🚀 [Presenter] Current players count: 1
+index-BpbacZ9Q.js:280 ❌ [Presenter] Error starting countdown: Object
+h @ index-BpbacZ9Q.js:280
+sxnsvwlxlzqinqhdklyx.supabase.co/rest/v1/game_sessions?id=eq.8420d4f2-194f-4cca-97d0-0fa265f126ad&select=*:1  Failed to load resource: the server responded with a status of 400 ()
+index-BpbacZ9Q.js:280 ❌ [Presenter] Error starting countdown: Object
+h @ index-BpbacZ9Q.js:280
+index-BpbacZ9Q.js:280 🔄 [Presenter] Polling - Current players: 1
+index-BpbacZ9Q.js:280 🔄 [Presenter] Polling - Current players: 1
+index-BpbacZ9Q.js:280 🔄 [Presenter] Polling - Current players: 1
+index-BpbacZ9Q.js:280 🔄 [Presenter] Polling - Current players: 1
