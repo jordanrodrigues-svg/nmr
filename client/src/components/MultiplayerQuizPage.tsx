@@ -23,15 +23,25 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
   const [answers, setAnswers] = useState<any[]>([]);
   const sessionSubscription = useRef<any>(null);
   const playersSubscription = useRef<any>(null);
+  const lastPhaseRef = useRef<string>('lobby');
+  const countdownRef = useRef<boolean>(false);
+  const countdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
-      // Cleanup subscriptions
+      // Cleanup subscriptions and timers
       if (sessionSubscription.current) {
         sessionSubscription.current.unsubscribe();
       }
       if (playersSubscription.current) {
         playersSubscription.current.unsubscribe();
+      }
+      if (countdownTimeoutRef.current) {
+        clearTimeout(countdownTimeoutRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
       }
     };
   }, []);
@@ -49,6 +59,19 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       }
       
       setGameSession(session);
+      lastPhaseRef.current = session.phase;
+      
+      // Handle initial session state for late joiners
+      if (session.phase === 'quiz') {
+        setGamePhase('quiz');
+        setCurrentQuestion(quizQuestions[session.current_question]);
+        setSelectedAnswer('');
+        setHasAnswered(false);
+      } else if (session.phase === 'results') {
+        setGamePhase('results');
+      } else {
+        setGamePhase('waiting');
+      }
       
       // Join the game
       console.log('🎮 Attempting to join game with session ID:', session.id, 'and name:', name.trim());
@@ -60,26 +83,36 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       sessionSubscription.current = subscribeToGameSession(session.id, (updatedSession) => {
         setGameSession(updatedSession);
         
-        if (updatedSession.phase === 'countdown') {
+        // Check if transitioning from lobby/waiting to quiz
+        if (lastPhaseRef.current === 'lobby' && updatedSession.phase === 'quiz' && !countdownRef.current) {
+          // Trigger countdown animation
+          countdownRef.current = true;
           setGamePhase('countdown');
           setCountdown(3);
+          
           // Start countdown animation with proper cleanup
           let countdownTimer = 3;
-          let countdownInterval: NodeJS.Timeout;
           
-          countdownInterval = setInterval(() => {
+          countdownIntervalRef.current = setInterval(() => {
             countdownTimer--;
             setCountdown(countdownTimer);
             if (countdownTimer <= 0) {
-              clearInterval(countdownInterval);
+              if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             }
           }, 1000);
           
-          // Store interval for cleanup if component unmounts or phase changes
-          setTimeout(() => {
-            if (countdownInterval) clearInterval(countdownInterval);
-          }, 4000);
-        } else if (updatedSession.phase === 'quiz') {
+          // After countdown, show the quiz (3000ms to match countdown)
+          countdownTimeoutRef.current = setTimeout(() => {
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            setGamePhase('quiz');
+            setCurrentQuestion(quizQuestions[updatedSession.current_question]);
+            setSelectedAnswer('');
+            setHasAnswered(false);
+            countdownRef.current = false;
+          }, 3000);
+          
+        } else if (updatedSession.phase === 'quiz' && !countdownRef.current) {
+          // Direct transition to quiz (no countdown for late joiners or subsequent questions)
           setGamePhase('quiz');
           setCurrentQuestion(quizQuestions[updatedSession.current_question]);
           setSelectedAnswer('');
@@ -87,6 +120,9 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         } else if (updatedSession.phase === 'results') {
           setGamePhase('results');
         }
+        
+        // Update last phase reference
+        lastPhaseRef.current = updatedSession.phase;
       });
       
       // Subscribe to players updates
@@ -94,8 +130,6 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
         console.log('🔄 Players list updated:', updatedPlayers);
         setPlayers(updatedPlayers);
       });
-      
-      setGamePhase('waiting');
     } catch (error) {
       console.error('Error connecting to quiz:', error);
       alert('Unable to connect to quiz. Please try again.');

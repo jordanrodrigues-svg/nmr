@@ -77,30 +77,15 @@ export default function PresentPageFull() {
     console.log('🚀 [Presenter] Current players count:', players.length);
     
     try {
-      // Start countdown phase first (3 seconds)
+      // Students will automatically see countdown when phase changes to quiz
       await updateGameSession(gameSession.id, { 
-        phase: 'countdown',
+        phase: 'quiz',
         current_question: 0
       });
-      
-      console.log('⏱️ [Presenter] Countdown started - students will see countdown');
-      
-      // After 4 seconds, start the actual quiz
-      setTimeout(async () => {
-        try {
-          await updateGameSession(gameSession.id, { 
-            phase: 'quiz',
-            current_question: 0
-          });
-          console.log('✅ [Presenter] Quiz started!');
-        } catch (error) {
-          console.error('❌ [Presenter] Error starting quiz phase:', error);
-        }
-      }, 4000);
-      
+      console.log('✅ [Presenter] Quiz started - students will see countdown!');
       setShowAnswer(false);
     } catch (error) {
-      console.error('❌ [Presenter] Error starting countdown:', error);
+      console.error('❌ [Presenter] Error starting quiz:', error);
     }
   };
 
