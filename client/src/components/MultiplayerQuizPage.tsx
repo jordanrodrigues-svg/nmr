@@ -112,8 +112,11 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             setGamePhase('quiz');
             setCurrentQuestion(quizQuestions[updatedSession.current_question]);
-            setSelectedAnswer('');
-            setHasAnswered(false);
+            // Only reset answer state for new questions
+            if (gameSession && updatedSession.current_question !== gameSession.current_question) {
+              setSelectedAnswer('');
+              setHasAnswered(false);
+            }
             countdownRef.current = false;
           }, 3000);
           
@@ -121,8 +124,11 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
           // Direct transition to quiz (no countdown for late joiners or subsequent questions)
           setGamePhase('quiz');
           setCurrentQuestion(quizQuestions[updatedSession.current_question]);
-          setSelectedAnswer('');
-          setHasAnswered(false);
+          // Only reset answer state if it's a NEW question
+          if (gameSession && updatedSession.current_question !== gameSession.current_question) {
+            setSelectedAnswer('');
+            setHasAnswered(false);
+          }
         } else if (updatedSession.phase === 'results') {
           setGamePhase('results');
         }
@@ -168,8 +174,11 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                 if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
                 setGamePhase('quiz');
                 setCurrentQuestion(quizQuestions[currentSession.current_question]);
-                setSelectedAnswer('');
-                setHasAnswered(false);
+                // Only reset answer state for new questions
+                if (gameSession && currentSession.current_question !== gameSession.current_question) {
+                  setSelectedAnswer('');
+                  setHasAnswered(false);
+                }
                 countdownRef.current = false;
               }, 3000);
               
@@ -177,8 +186,11 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
               // Direct transition to quiz (no countdown for late joiners or subsequent questions)
               setGamePhase('quiz');
               setCurrentQuestion(quizQuestions[currentSession.current_question]);
-              setSelectedAnswer('');
-              setHasAnswered(false);
+              // Only reset answer state if it's a NEW question
+              if (gameSession && currentSession.current_question !== gameSession.current_question) {
+                setSelectedAnswer('');
+                setHasAnswered(false);
+              }
             } else if (currentSession.phase === 'results') {
               setGamePhase('results');
             }
@@ -557,7 +569,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                 {Object.entries(currentQuestion.options).map(([key, value]) => {
                   const isSelected = selectedAnswer === key;
                   const isCorrect = hasAnswered && key === currentQuestion.correct;
-                  const isWrong = hasAnswered && isSelected && key !== currentQuestion.correct;
+                  // Remove wrong answer highlighting - students should not see wrong answers
                   
                   return (
                     <Button
@@ -566,7 +578,6 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                       disabled={hasAnswered}
                       className={`p-6 h-auto text-left justify-start min-h-[4rem] ${
                         isCorrect ? 'bg-green-600 hover:bg-green-600' : 
-                        isWrong ? 'bg-red-600 hover:bg-red-600' : 
                         isSelected ? 'bg-blue-600 hover:bg-blue-600' : 
                         'bg-white/20 hover:bg-white/30'
                       } text-white border-white/30`}
@@ -579,7 +590,6 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                         <span className="text-lg leading-relaxed break-words flex-1 text-left">{value as string}</span>
                         <div className="flex-shrink-0">
                           {hasAnswered && isCorrect && <CheckCircle className="w-6 h-6 text-green-300" />}
-                          {hasAnswered && isWrong && <XCircle className="w-6 h-6 text-red-300" />}
                         </div>
                       </div>
                     </Button>
@@ -590,12 +600,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
               {hasAnswered && (
                 <div className="mt-6 p-4 bg-white/20 rounded-lg">
                   <p className="text-white text-center">
-                    {selectedAnswer === currentQuestion.correct ? '🎉 Correct!' : '❌ Incorrect'}
-                    {selectedAnswer !== currentQuestion.correct && (
-                      <span className="block mt-2">
-                        The correct answer was: {currentQuestion.options[currentQuestion.correct]}
-                      </span>
-                    )}
+                    {selectedAnswer === currentQuestion.correct ? '🎉 Correct!' : 'Answer submitted!'}
                   </p>
                   <p className="text-white/60 text-center mt-2">
                     Waiting for next question...
