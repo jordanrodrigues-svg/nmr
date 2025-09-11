@@ -27,6 +27,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
   const countdownRef = useRef<boolean>(false);
   const countdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sessionPollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -42,6 +43,9 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       }
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
+      }
+      if (sessionPollingRef.current) {
+        clearInterval(sessionPollingRef.current);
       }
     };
   }, []);
@@ -81,6 +85,8 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       
       // Subscribe to session updates
       sessionSubscription.current = subscribeToGameSession(session.id, (updatedSession) => {
+        console.log('📡 [Student] Received session update via subscription:', updatedSession);
+        console.log('📡 [Student] Previous phase:', lastPhaseRef.current, '-> New phase:', updatedSession.phase);
         setGameSession(updatedSession);
         
         // Check if transitioning from lobby/waiting to quiz
@@ -127,9 +133,66 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       
       // Subscribe to players updates
       playersSubscription.current = subscribeToPlayers(session.id, (updatedPlayers) => {
-        console.log('🔄 Players list updated:', updatedPlayers);
+        console.log('🔄 [Student] Players list updated:', updatedPlayers);
         setPlayers(updatedPlayers);
       });
+
+      // Add polling fallback for session updates (every 2 seconds for students)
+      const pollInterval = setInterval(async () => {
+        try {
+          const currentSession = await getGameSession('CHEMWITHJ');
+          if (currentSession && currentSession.phase !== gameSession?.phase) {
+            console.log('🔄 [Student] Polling detected session change:', currentSession.phase);
+            
+            // Manually trigger the same logic as the subscription
+            if (lastPhaseRef.current === 'lobby' && currentSession.phase === 'quiz' && !countdownRef.current) {
+              console.log('🎬 [Student] Triggering countdown via polling fallback');
+              // Trigger countdown animation
+              countdownRef.current = true;
+              setGamePhase('countdown');
+              setCountdown(3);
+              
+              // Start countdown animation with proper cleanup
+              let countdownTimer = 3;
+              
+              countdownIntervalRef.current = setInterval(() => {
+                countdownTimer--;
+                setCountdown(countdownTimer);
+                if (countdownTimer <= 0) {
+                  if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                }
+              }, 1000);
+              
+              // After countdown, show the quiz (3000ms to match countdown)
+              countdownTimeoutRef.current = setTimeout(() => {
+                if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                setGamePhase('quiz');
+                setCurrentQuestion(quizQuestions[currentSession.current_question]);
+                setSelectedAnswer('');
+                setHasAnswered(false);
+                countdownRef.current = false;
+              }, 3000);
+              
+            } else if (currentSession.phase === 'quiz' && !countdownRef.current) {
+              // Direct transition to quiz (no countdown for late joiners or subsequent questions)
+              setGamePhase('quiz');
+              setCurrentQuestion(quizQuestions[currentSession.current_question]);
+              setSelectedAnswer('');
+              setHasAnswered(false);
+            } else if (currentSession.phase === 'results') {
+              setGamePhase('results');
+            }
+            
+            setGameSession(currentSession);
+            lastPhaseRef.current = currentSession.phase;
+          }
+        } catch (error) {
+          console.error('❌ [Student] Session polling failed:', error);
+        }
+      }, 2000);
+
+      // Store interval for cleanup
+      sessionPollingRef.current = pollInterval;
     } catch (error) {
       console.error('Error connecting to quiz:', error);
       alert('Unable to connect to quiz. Please try again.');

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Play, SkipForward, RotateCcw, Trophy, Crown, Medal, Award, Monitor } from 'lucide-react';
 import { quizQuestions } from '@shared/quiz-data';
-import { supabase, type GameSession, type Player, getGameSession, createGameSession, updateGameSession, subscribeToGameSession, subscribeToPlayers } from '@/lib/supabase';
+import { supabase, type GameSession, type Player, getGameSession, createGameSession, updateGameSession, subscribeToGameSession, subscribeToPlayers, getSessionPlayers } from '@/lib/supabase';
 
 export default function PresentPageFull() {
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
@@ -43,6 +43,7 @@ export default function PresentPageFull() {
       
       // Subscribe to session updates
       sessionSubscription.current = subscribeToGameSession(session.id, (updatedSession) => {
+        console.log('📡 [Presenter] Received session update via subscription:', updatedSession);
         setGameSession(updatedSession);
       });
       
@@ -53,13 +54,19 @@ export default function PresentPageFull() {
         setPlayers(updatedPlayers);
       });
       
-      // Fallback polling for player updates (every 3 seconds)
-      const { getSessionPlayers } = await import('@/lib/supabase');
+      // Fallback polling for player updates AND session updates (every 3 seconds)
       pollInterval.current = setInterval(async () => {
         try {
           const currentPlayers = await getSessionPlayers(session.id);
           console.log('🔄 [Presenter] Polling - Current players:', currentPlayers.length);
           setPlayers(currentPlayers);
+          
+          // Also poll for session updates as fallback
+          const currentSession = await getGameSession('CHEMWITHJ');
+          if (currentSession && (currentSession.phase !== gameSession?.phase || currentSession.current_question !== gameSession?.current_question)) {
+            console.log('🔄 [Presenter] Polling detected session change - updating state');
+            setGameSession(currentSession);
+          }
         } catch (error) {
           console.error('❌ [Presenter] Polling failed:', error);
         }
