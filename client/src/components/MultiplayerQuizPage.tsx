@@ -147,8 +147,8 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
       const pollInterval = setInterval(async () => {
         try {
           const currentSession = await getGameSession('CHEMWITHJ');
-          if (currentSession && currentSession.phase !== gameSession?.phase) {
-            console.log('🔄 [Student] Polling detected session change:', currentSession.phase);
+          if (currentSession && (currentSession.phase !== gameSession?.phase || currentSession.current_question !== gameSession?.current_question)) {
+            console.log('🔄 [Student] Polling detected session change:', currentSession.phase, 'Question:', currentSession.current_question);
             
             // Manually trigger the same logic as the subscription
             if (lastPhaseRef.current === 'lobby' && currentSession.phase === 'quiz' && !countdownRef.current) {
@@ -186,10 +186,13 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
               // Direct transition to quiz (no countdown for late joiners or subsequent questions)
               setGamePhase('quiz');
               setCurrentQuestion(quizQuestions[currentSession.current_question]);
-              // Only reset answer state if it's a NEW question
+              // Only reset answer state if it's a NEW question, not phase changes
               if (gameSession && currentSession.current_question !== gameSession.current_question) {
+                console.log('🔄 [Student] New question detected, resetting answer state');
                 setSelectedAnswer('');
                 setHasAnswered(false);
+              } else {
+                console.log('🔄 [Student] Same question, keeping answer state');
               }
             } else if (currentSession.phase === 'results') {
               setGamePhase('results');
@@ -230,27 +233,10 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
     
     const newScore = currentPlayer.score + (isCorrect ? 1 : 0);
     
-    // Handle offline mode (when session_code is 'OFFLINE')
+    // Handle offline mode (when session_code is 'OFFLINE') - DISABLED auto-advance for instructor-led mode
     if (gameSession.session_code === 'OFFLINE') {
       setCurrentPlayer({ ...currentPlayer, score: newScore, answers: updatedAnswers });
-      
-      // Auto-advance to next question after 2 seconds in offline mode
-      setTimeout(() => {
-        const nextQuestionIndex = gameSession.current_question + 1;
-        if (nextQuestionIndex < quizQuestions.length) {
-          // Move to next question
-          setGameSession({
-            ...gameSession,
-            current_question: nextQuestionIndex
-          });
-          setCurrentQuestion(quizQuestions[nextQuestionIndex]);
-          setSelectedAnswer('');
-          setHasAnswered(false);
-        } else {
-          // Quiz finished - show results
-          setGamePhase('results');
-        }
-      }, 2000);
+      // Remove auto-advance - instructor controls when to move to next question
       return;
     }
     
