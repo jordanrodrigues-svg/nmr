@@ -78,7 +78,7 @@ Neighboring protons whisper to each other causing peaks to split into multiples:
   },
   {
     id: "oh-nh-signals",
-    code: "C5VX",
+    code: "Q5VX",
     order: 5,
     title: "The Mysterious OH and NH Signals & Solving the Ester Puzzle",
     slides: "Slides 13-14",
