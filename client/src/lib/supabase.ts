@@ -17,7 +17,7 @@ console.log('🔑 Has API key:', !!supabaseAnonKey);
 // Test connection by checking if we can query the database
 (async () => {
   try {
-    const { data, error, count } = await supabase.from('game_sessions').select('count(*)', { count: 'exact', head: true });
+    const { data, error, count } = await supabase.from('game_sessions').select('id', { count: 'exact', head: true });
     if (error) {
       console.error('❌ Database connection failed:', error.message);
       console.error('🔍 Error details:', error);
@@ -34,7 +34,7 @@ console.log('🔑 Has API key:', !!supabaseAnonKey);
 // Also test players table
 (async () => {
   try {
-    const { data, error, count } = await supabase.from('players').select('count(*)', { count: 'exact', head: true });
+    const { data, error, count } = await supabase.from('players').select('id', { count: 'exact', head: true });
     if (error) {
       console.error('❌ Players table not accessible:', error.message);
       console.error('💡 Make sure to run the SQL commands to create the tables!');
