@@ -271,7 +271,7 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                 </div>
                 <p className="text-white/80">Players in lobby: {players.length}</p>
                 
-                <div className="mt-8">
+                <div className="mt-8 space-y-4">
                   <Button
                     onClick={leaveQuiz}
                     variant="outline"
@@ -280,6 +280,17 @@ export function MultiplayerQuizPage({ onBack }: MultiplayerQuizPageProps) {
                   >
                     Leave Quiz
                   </Button>
+                  
+                  {/* Discrete failsafe link */}
+                  <div className="text-center">
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="text-white/50 hover:text-white/70 text-xs underline transition-colors"
+                      data-testid="link-failsafe-backup"
+                    >
+                      Game not starting? Ask your host and click here
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardContent>
